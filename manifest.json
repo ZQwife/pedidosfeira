@@ -1,9 +1,0 @@
-{
-  "name": "Comandas - Mesas",
-  "short_name": "Comandas",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f4f2ee",
-  "theme_color": "#9d3b24",
-  "lang": "pt-PT"
-}
