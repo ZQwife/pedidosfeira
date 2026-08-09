@@ -1,0 +1,194 @@
+<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#9d3b24"><link rel="manifest" href="manifest.json"><title>Comandas</title><style>
+:root{--bg:#f4f2ee;--card:#fff;--ink:#20201e;--muted:#77736c;--line:#e3ded5;--accent:#9d3b24}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);padding:12px 14px}header h1{margin:0;font-size:20px}header small,.muted{color:var(--muted)}
+nav{position:sticky;top:58px;z-index:29;display:flex;gap:5px;padding:7px;background:#fff;border-bottom:1px solid var(--line);overflow:auto}nav button{flex:1;min-width:75px;border:0;border-radius:10px;padding:10px 5px;font-weight:800;background:#eeeae3;white-space:nowrap}nav button.active{background:var(--ink);color:#fff}
+main{max-width:1000px;margin:auto;padding:12px}.screen{display:none}.screen.active{display:block}.panel,.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:12px}h2,h3{margin:0 0 9px}label{font-weight:800;font-size:13px;display:block;margin:7px 0 4px}input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button{cursor:pointer;font:inherit}.primary,.danger,.ghost,.ok{border:0;border-radius:10px;padding:10px 12px;font-weight:800}.primary{background:var(--accent);color:#fff}.danger{background:#f4dcd6;color:#8d2f1d}.ghost{background:#eeeae3}.ok{background:#dff0e5;color:#24663d}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tabs{display:flex;gap:6px;overflow:auto;padding:5px 0 8px}.tabs button{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:18px;padding:8px 11px;font-weight:700}.tabs button.active{background:#e9e4dc}.products{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.product{border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px;text-align:left;min-height:68px}.product strong{display:block}
+.item,.cash-row{border-bottom:1px solid var(--line);padding:9px 0}.qty{display:flex;align-items:center;gap:6px}.qty button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px}.total{font-size:19px;font-weight:900;margin-top:10px}.empty{text-align:center;color:var(--muted);padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}.badge{display:inline-block;padding:4px 7px;border-radius:20px;background:#f5ddd7;color:#8d2f1d;font-size:11px;font-weight:900}
+.stage{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.stage input{width:22px;height:22px;flex:0 0 auto;margin:0}.done .name{text-decoration:line-through;color:var(--muted)}.menu-row{display:grid;grid-template-columns:1fr 105px auto;gap:7px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}@media(min-width:650px){.products{grid-template-columns:repeat(3,1fr)}}
+</style></head><body>
+<header><h1>🍽️ Comandas</h1><small>Pedidos por mesa</small></header>
+<nav><button id="navOrders" class="active" onclick="show('orders')">➕ Pedido</button><button id="navKitchen" onclick="show('kitchen')">🍳 Cozinha</button><button id="navDelivery" onclick="show('delivery')">☑️ Entregas</button><button id="navCash" onclick="show('cash')">💶 Caixa</button><button id="navHistory" onclick="show('history')">📜 Histórico</button><button id="navMenu" onclick="show('menu')">⚙️ Menu</button></nav>
+<main>
+<section id="orders" class="screen active"><div class="panel"><h2>Novo pedido / acrescentar à mesa</h2><label>Mesa</label><input id="table" placeholder="Ex.: Mesa 1"><div class="muted">Podes usar a mesma mesa várias vezes; cada pedido fica associado à mesa.</div><div id="cats" class="tabs"></div><div id="products" class="products"></div></div>
+<div class="panel"><div class="row"><h2>Pedido atual</h2><button class="ghost" onclick="clearCart()">Limpar</button></div><div id="cart"></div><div class="total">Total: <span id="cartTotal">0,00 €</span></div><button class="primary" style="width:100%;margin-top:11px" onclick="saveOrder()">Guardar pedido</button></div></section>
+<section id="kitchen" class="screen"><div class="panel"><div class="row"><div><h2>🍳 Cozinha</h2><div class="muted">Marca cada produto quando sair da cozinha.</div></div><button class="ghost" onclick="renderKitchen()">↻</button></div></div><div id="kitchenList" class="grid"></div></section>
+<section id="delivery" class="screen"><div class="panel"><div class="row"><div><h2>☑️ Entregas</h2><div class="muted">Só aparecem produtos que já saíram da cozinha.</div></div><button class="ghost" onclick="renderDelivery()">↻</button></div></div><div id="deliveryList" class="grid"></div></section>
+<section id="cash" class="screen"><div class="panel"><div class="row"><div><h2>💶 Caixa</h2><div class="muted">Resumo por mesa, incluindo pedidos adicionais.</div></div><button class="danger" onclick="clearOrders()">Limpar tudo</button></div></div><div id="cashList"></div></section>
+<section id="history" class="screen">
+<div class="panel">
+  <div class="row">
+    <div>
+      <h2>📜 Histórico de pagamentos</h2>
+      <div class="muted">Aqui ficam os pedidos já pagos.</div>
+    </div>
+    <button class="ghost" onclick="renderHistory()">↻</button>
+  </div>
+</div>
+<div id="historyList"></div>
+</section>
+<section id="menu" class="screen"><div class="panel"><h2>⚙️ Menu e preços</h2><div class="muted">Altera nome, categoria ou preço. Pedidos antigos mantêm o preço original.</div><div id="menuList" style="margin-top:10px"></div></div><div class="panel"><h3>Adicionar produto</h3><label>Nome</label><input id="newName" placeholder="Nome"><label>Categoria</label><input id="newCat" placeholder="Categoria"><label>Preço (€)</label><input id="newPrice" type="number" step="0.01" min="0"><button class="primary" style="width:100%;margin-top:10px" onclick="addProduct()">Adicionar produto</button></div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ===== CONFIGURAÇÃO SUPABASE =====
+const SUPABASE_URL = "https://ehhocspmhulvrafvdnmw.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_piJ0FSuS5uECQjAXYFCvxA_1017VuWa";
+const ONLINE = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("COLE_AQUI") && SUPABASE_KEY.startsWith("sb_") && !SUPABASE_KEY.includes("COLE_AQUI");
+const db = ONLINE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+const DEFAULT=[
+ ["p1","Sumos","BEBIDAS",1.5],["p2","Água","BEBIDAS",1],["p3","Sangria","BEBIDAS",3],["p4","Sidra","BEBIDAS",3],["p5","Fino","BEBIDAS",2],["p6","Café","BEBIDAS",1],
+ ["p7","Pão","ENTRADAS",1.5],["p8","Queijo","ENTRADAS",3],["p9","Presunto","ENTRADAS",5],["p10","Chouriço","ENTRADAS",4],["p11","Alheira","ENTRADAS",4],
+ ["p12","Pica-Pau","PRATOS PRINCIPAIS",3.5],["p13","Prego","PRATOS PRINCIPAIS",4],["p14","Bifana","PRATOS PRINCIPAIS",3.5],["p15","Caldo-verde","PRATOS PRINCIPAIS",3],["p16","Hambúrguer","PRATOS PRINCIPAIS",4.5]
+].map(x=>({id:x[0],name:x[1],cat:x[2],price:x[3],active:true}));
+
+const money=n=>Number(n||0).toLocaleString("pt-PT",{style:"currency",currency:"EUR"});
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const el=id=>document.getElementById(id);
+let products=[], orders=[], cart={}, cat="Todos", realtimeChannel=null;
+
+function setStatus(text,ok=false){
+  const h=document.querySelector("header small");
+  if(h) h.textContent=(ok?"🟢 ":"🔴 ")+text;
+}
+function showError(msg){console.error(msg);setStatus(msg,false);}
+function normalizeProduct(p){return {id:String(p.id),name:String(p.name),cat:String(p.category??p.cat??"OUTROS"),price:Number(p.price)||0,active:p.active!==false};}
+function toOrder(row){
+  return {
+    id:String(row.id), table:row.table_name, createdAt:row.created_at, paid:row.paid===true, paidAt:row.paid_at||null,
+    items:(row.order_items||[]).map(i=>({id:String(i.id),name:i.product_name,cat:i.category,price:Number(i.unit_price)||0,qty:Number(i.quantity)||1,kitchen:i.kitchen_done===true,delivered:i.delivered===true}))
+  };
+}
+function total(o){return (o.items||[]).reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.qty)||0),0)}
+
+function renderCats(){
+  const a=["Todos",...new Set(products.filter(x=>x.active).map(x=>x.cat))];
+  el("cats").innerHTML=a.map(x=>`<button class="${x===cat?"active":""}" onclick='selectCat(${JSON.stringify(x)})'>${esc(x)}</button>`).join("");
+}
+function selectCat(x){cat=x;renderCats();renderProducts()}
+function renderProducts(){
+  let visible=products.filter(x=>x.active&&(cat==="Todos"||x.cat===cat));
+  if(!visible.length&&cat!=="Todos"){cat="Todos";renderCats();visible=products.filter(x=>x.active)}
+  el("products").innerHTML=visible.map(x=>`<button class="product" onclick='add(${JSON.stringify(x.id)})'><strong>${esc(x.name)}</strong><small>${money(x.price)}</small></button>`).join("")||'<div class="empty">Sem produtos.</div>';
+}
+function add(id){cart[id]=(cart[id]||0)+1;renderCart()}
+function ch(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart()}
+function clearCart(){cart={};renderCart()}
+function renderCart(){
+  const ids=Object.keys(cart);
+  el("cart").innerHTML=ids.length?ids.map(id=>{const x=products.find(p=>String(p.id)===String(id));if(!x)return"";return `<div class="item row"><div><b>${esc(x.name)}</b><div class="muted">${money(x.price)} cada</div></div><div class="qty"><button onclick="ch('${id}',-1)">−</button><b>${cart[id]}</b><button onclick="ch('${id}',1)">+</button></div><b>${money(x.price*cart[id])}</b></div>`}).join(""):'<div class="empty">Escolhe produtos.</div>';
+  el("cartTotal").textContent=money(ids.reduce((s,id)=>{const p=products.find(x=>String(x.id)===String(id));return s+(p?p.price*cart[id]:0)},0));
+}
+
+async function loadProducts(){
+  if(!db){products=JSON.parse(localStorage.getItem("comandas_products")||"null")||DEFAULT.map(x=>({...x}));renderCats();renderProducts();renderMenu();return false}
+  const r=await db.from("products").select("id,name,category,price,active").order("id");
+  if(r.error) throw r.error;
+  products=(r.data||[]).map(normalizeProduct);
+  renderCats();renderProducts();renderMenu();
+  localStorage.setItem("comandas_products",JSON.stringify(products));
+  return true;
+}
+async function loadOrders(){
+  if(!db){orders=JSON.parse(localStorage.getItem("comandas_orders")||"[]")||[];renderAllLists();return false}
+  const r=await db.from("orders").select("id,table_name,paid,paid_at,created_at,order_items(id,product_name,category,quantity,unit_price,kitchen_done,delivered,created_at)").order("created_at",{ascending:false}).limit(500);
+  if(r.error) throw r.error;
+  orders=(r.data||[]).map(toOrder);renderAllLists();
+  localStorage.setItem("comandas_orders",JSON.stringify(orders));
+  return true;
+}
+async function loadAll(){
+  try{
+    if(!ONLINE){await loadProducts();await loadOrders();setStatus("Modo local — configure o Supabase",false);return}
+    await loadProducts();await loadOrders();subscribeRealtime();setStatus("Online · sincronizado",true);
+  }catch(e){
+    console.error(e);setStatus("Erro de ligação ao Supabase",false);
+    // Mantém a aplicação utilizável mesmo se a ligação falhar.
+    products=JSON.parse(localStorage.getItem("comandas_products")||"null")||DEFAULT.map(x=>({...x}));
+    orders=JSON.parse(localStorage.getItem("comandas_orders")||"[]")||[];
+    renderCats();renderProducts();renderCart();renderAllLists();renderMenu();
+    alert("Não foi possível ligar ao Supabase. A aplicação ficou em modo local.\n\n"+(e.message||e));
+  }
+}
+function renderAllLists(){renderKitchen();renderDelivery();renderCash();renderHistory()}
+
+async function saveOrder(){
+  const table=el("table").value.trim(),ids=Object.keys(cart);
+  if(!table)return alert("Indica a mesa.");
+  if(!ids.length)return alert("Adiciona pelo menos um produto.");
+  const selected=ids.map(id=>products.find(p=>String(p.id)===String(id))).filter(Boolean);
+  if(!selected.length)return alert("Não há produtos válidos no pedido.");
+  if(!db){
+    const stamp=Date.now();orders.push({id:String(stamp),table,createdAt:new Date().toISOString(),paid:false,items:selected.map((p,n)=>({id:stamp+"-"+n,name:p.name,cat:p.cat,price:p.price,qty:cart[p.id],kitchen:false,delivered:false}))});
+    localStorage.setItem("comandas_orders",JSON.stringify(orders));clearCart();el("table").value="";renderAllLists();return alert("Pedido guardado para "+table+".");
+  }
+  const stamp=new Date().toISOString();
+  const o=await db.from("orders").insert({table_name:table,paid:false,created_at:stamp}).select("id").single();
+  if(o.error)return alert(o.error.message);
+  const rows=selected.map(p=>({order_id:o.data.id,product_id:Number.isFinite(Number(p.id))?Number(p.id):null,product_name:p.name,category:p.cat,quantity:cart[p.id],unit_price:p.price,kitchen_done:false,delivered:false}));
+  const ir=await db.from("order_items").insert(rows);
+  if(ir.error){await db.from("orders").delete().eq("id",o.data.id);return alert(ir.error.message)}
+  clearCart();el("table").value="";await loadOrders();alert("Pedido guardado para "+table+".");
+}
+
+function kitchenItem(i){const c=String(i.cat||"").toUpperCase();return c==="ENTRADAS"||c==="PRATOS PRINCIPAIS"}
+function renderKitchen(){
+  const a=orders.filter(o=>o.items.some(i=>kitchenItem(i)&&!i.kitchen));
+  el("kitchenList").innerHTML=a.length?a.map(o=>{const its=o.items.filter(kitchenItem);return `<div class="card"><span class="badge">MESA ${esc(o.table)}</span><div class="muted">Pedido ${esc(o.id).slice(-5)} · ${new Date(o.createdAt).toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})}</div>${its.map(i=>`<label class="stage ${i.kitchen?"done":""}"><input type="checkbox" ${i.kitchen?"checked":""} onchange="kitchenToggle('${o.id}','${i.id}',this.checked)"><span class="name"><b>${i.qty} × ${esc(i.name)}</b><br><span class="muted">${i.kitchen?"Saiu da cozinha":"Por preparar"} · ${money(i.price*i.qty)}</span></span></label>`).join("")}</div>`}).join(""):'<div class="panel empty">Não há entradas ou pratos principais pendentes na cozinha.</div>';
+}
+async function kitchenToggle(oid,iid,v){
+  const o=orders.find(x=>String(x.id)===String(oid)),i=o?.items.find(x=>String(x.id)===String(iid));if(!i)return;
+  i.kitchen=v;renderAllLists();
+  if(db){const r=await db.from("order_items").update({kitchen_done:v}).eq("id",iid);if(r.error){alert(r.error.message);await loadOrders()}}
+  else localStorage.setItem("comandas_orders",JSON.stringify(orders));
+}
+function isReadyForDelivery(i){return !kitchenItem(i)||i.kitchen===true}
+function renderDelivery(){
+  const ready=[];orders.forEach(o=>{const items=o.items.filter(i=>!i.delivered&&isReadyForDelivery(i));if(items.length)ready.push({o,items})});
+  el("deliveryList").innerHTML=ready.length?ready.map(({o,items})=>`<div class="card"><span class="badge">MESA ${esc(o.table)}</span><div class="muted">Pedido ${esc(o.id).slice(-5)} · ${new Date(o.createdAt).toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})}</div>${items.map(i=>`<label class="stage"><input type="checkbox" onchange="deliveryToggle('${o.id}','${i.id}',this.checked)"><span class="name"><b>${i.qty} × ${esc(i.name)}</b><br><span class="muted">${kitchenItem(i)?"Saiu da cozinha":"Pronto para entregar"} · ${money(i.price*i.qty)}</span></span></label>`).join("")}</div>`).join(""):'<div class="panel empty">Não há itens prontos para entregar.</div>';
+}
+async function deliveryToggle(oid,iid,v){const o=orders.find(x=>String(x.id)===String(oid)),i=o?.items.find(x=>String(x.id)===String(iid));if(!i)return;i.delivered=v;renderAllLists();if(db){const r=await db.from("order_items").update({delivered:v}).eq("id",iid);if(r.error){alert(r.error.message);await loadOrders()}}else localStorage.setItem("comandas_orders",JSON.stringify(orders))}
+
+function renderCash(){
+  const pending=orders.filter(o=>o.paid!==true);if(!pending.length){el("cashList").innerHTML='<div class="panel empty">Não há pedidos por pagar.</div>';return}
+  const map={};pending.forEach(o=>(map[o.table]??=[]).push(o));
+  el("cashList").innerHTML=Object.keys(map).sort().map(t=>{const os=map[t],sum=os.reduce((z,o)=>z+total(o),0);return `<div class="panel"><div class="row"><h2>${esc(t)}</h2><div class="total">${money(sum)}</div></div>${os.map(o=>`<div style="margin-top:15px;padding:10px;border:1px solid var(--line);border-radius:10px"><div class="row"><div><b>Pedido ${esc(o.id).slice(-5)}</b><div class="muted">${new Date(o.createdAt).toLocaleString("pt-PT")}</div></div><span class="badge">POR PAGAR</span></div>${o.items.map(i=>`<div class="cash-row row"><span>${i.qty} × ${esc(i.name)}</span><b>${money(i.price*i.qty)}</b></div>`).join("")}<div class="row" style="margin-top:10px"><b>Total</b><b>${money(total(o))}</b></div><button class="ok" style="width:100%;margin-top:10px" onclick="markPaid('${o.id}')">💰 MARCAR COMO PAGO</button></div>`).join("")}</div>`}).join("")
+}
+async function markPaid(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;o.paid=true;o.paidAt=new Date().toISOString();renderAllLists();
+  if(db){const r=await db.from("orders").update({paid:true,paid_at:o.paidAt}).eq("id",id);if(r.error){alert(r.error.message);await loadOrders()}}
+  else localStorage.setItem("comandas_orders",JSON.stringify(orders));
+}
+async function markUnpaid(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;o.paid=false;o.paidAt=null;renderAllLists();
+  if(db){const r=await db.from("orders").update({paid:false,paid_at:null}).eq("id",id);if(r.error){alert(r.error.message);await loadOrders()}}
+  else localStorage.setItem("comandas_orders",JSON.stringify(orders));
+}
+function renderHistory(){
+  const paid=orders.filter(o=>o.paid===true).sort((a,b)=>new Date(b.paidAt||b.createdAt)-new Date(a.paidAt||a.createdAt)),tp=paid.reduce((z,o)=>z+total(o),0);
+  if(!paid.length){el("historyList").innerHTML='<div class="panel empty">Ainda não existem pagamentos registados.</div>';return}
+  const map={};paid.forEach(o=>(map[o.table]??=[]).push(o));
+  el("historyList").innerHTML=Object.keys(map).sort().map(t=>{const os=map[t];return `<div class="panel"><div class="row"><h2>${esc(t)}</h2><div class="total">${money(os.reduce((z,o)=>z+total(o),0))}</div></div>${os.map(o=>`<div style="margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:10px"><div class="row"><div><b>Pedido ${esc(o.id).slice(-5)}</b><div class="muted">Pago em ${new Date(o.paidAt||o.createdAt).toLocaleString("pt-PT")}</div></div><span class="badge">PAGO</span></div>${o.items.map(i=>`<div class="cash-row row"><span>${i.qty} × ${esc(i.name)}</span><b>${money(i.price*i.qty)}</b></div>`).join("")}<div class="row" style="margin-top:8px"><b>Total pago</b><b>${money(total(o))}</b></div><button class="ghost" style="width:100%;margin-top:10px" onclick="markUnpaid('${o.id}')">↩️ Voltar para Caixa</button></div>`).join("")}</div>`}).join("")+`<div class="panel"><div class="row"><h2>💰 Total em caixa</h2><div class="total">${money(tp)}</div></div><div class="muted">Soma de todos os pedidos pagos.</div></div>`;
+}
+function renderMenu(){el("menuList").innerHTML=products.map(x=>`<div class="menu-row"><input id="n-${x.id}" value="${esc(x.name)}"><input id="p-${x.id}" type="number" step="0.01" value="${x.price}"><button class="${x.active?"ok":"ghost"}" onclick="toggleProduct('${x.id}')">${x.active?"Ativo":"Inativo"}</button><input id="c-${x.id}" value="${esc(x.cat)}"><button class="primary" onclick="editProduct('${x.id}')">Guardar</button></div>`).join("")}
+async function editProduct(id){const x=products.find(p=>String(p.id)===String(id));if(!x)return;x.name=el("n-"+id).value.trim()||x.name;x.price=Number(el("p-"+id).value)||0;x.cat=el("c-"+id).value.trim()||x.cat;if(db){const r=await db.from("products").update({name:x.name,price:x.price,category:x.cat}).eq("id",id);if(r.error)return alert(r.error.message)}else localStorage.setItem("comandas_products",JSON.stringify(products));renderMenu();renderCats();renderProducts()}
+async function toggleProduct(id){const x=products.find(p=>String(p.id)===String(id));if(!x)return;x.active=!x.active;if(db){const r=await db.from("products").update({active:x.active}).eq("id",id);if(r.error){x.active=!x.active;return alert(r.error.message)}}else localStorage.setItem("comandas_products",JSON.stringify(products));renderMenu();renderCats();renderProducts()}
+async function addProduct(){const name=el("newName").value.trim(),catg=el("newCat").value.trim(),price=Number(el("newPrice").value);if(!name||!catg||Number.isNaN(price))return alert("Preenche nome, categoria e preço.");if(db){const r=await db.from("products").insert({name,category:catg,price,active:true});if(r.error)return alert(r.error.message);await loadProducts()}else{products.push({id:"p"+Date.now(),name,cat:catg,price,active:true});localStorage.setItem("comandas_products",JSON.stringify(products));renderMenu();renderCats();renderProducts()}el("newName").value="";el("newCat").value="";el("newPrice").value=""}
+async function clearOrders(){if(!confirm("Apagar todas as comandas? Esta ação é definitiva."))return;if(db){alert("Por segurança, a limpeza total da base de dados será feita mais tarde.")}else{orders=[];localStorage.setItem("comandas_orders","[]");renderAllLists()}}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));el(id).classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));el("nav"+id[0].toUpperCase()+id.slice(1)).classList.add("active");if(id==="kitchen")renderKitchen();if(id==="delivery")renderDelivery();if(id==="cash")renderCash();if(id==="history")renderHistory();if(id==="menu")renderMenu()}
+function subscribeRealtime(){
+  if(!db)return;
+  if(realtimeChannel)db.removeChannel(realtimeChannel);
+  realtimeChannel=db.channel("feira-live")
+    .on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>loadOrders())
+    .on("postgres_changes",{event:"*",schema:"public",table:"order_items"},()=>loadOrders())
+    .on("postgres_changes",{event:"*",schema:"public",table:"products"},()=>loadProducts())
+    .subscribe((status)=>{if(status==="SUBSCRIBED")setStatus("Online · tempo real",true)});
+}
+
+renderCats();renderProducts();renderCart();renderAllLists();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js"));
+loadAll();
+</script></body></html>
